@@ -69,19 +69,55 @@ function main() {
     const data = fs.readFileSync(
         "./src/day2/input.txt",
         { encoding: 'ascii', flag: 'r' }
-    );
+    ).split("\n").slice(0, -1);
 
-    const rounds = data.split("\n").map((line) => {
+    console.log("Part 1:");
+    const rounds = data.map(line => {
         return new Round(...line.split(" ").map(letter =>
             LetterShape.get(letter)
         ) as [Shape, Shape])
-    }).slice(0, -1);
+    });
 
     let total = 0;
     rounds.forEach(round => {
         total += round.Scores()[1];
     });
     console.log(`total score: ${total}`);
+
+
+    console.log("Part 2:");
+    const rounds2 = data.map(line => {
+        let score = 0;
+        const other = LetterShape.get(line[0]) as Shape;
+        switch (line[2]) {
+            case "X":
+                score += OutcomeScore.Loss;
+                const self = ShapeBeats.get(other) as Shape;
+                score += ShapeScore.get(self) as number;
+                break;
+            case "Y":
+                score += OutcomeScore.Tie;
+                score += ShapeScore.get(other) as number;
+                break;
+            case "Z":
+                score += OutcomeScore.Win;
+                ShapeBeats.forEach((first, second) => {
+                    if (first == other) {
+                        score += ShapeScore.get(second) as number;
+                    }
+                });
+                break;
+            default:
+                throw new Error(`Input line "${line}" not valid`);
+        }
+        return score;
+    });
+
+    let total2 = 0;
+    rounds2.forEach(round => {
+        total2 += round;
+    });
+    console.log(`total score: ${total2}`);
 };
 
 
