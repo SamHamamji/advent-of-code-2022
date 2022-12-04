@@ -24,6 +24,7 @@ function main() {
         { first: elves[0], second: elves[1] } as ElfPair
     ));
 
+    console.log("Part 1");
     let sum = 0;
     data.forEach(pair => {
         if (contained(pair)) {
@@ -31,11 +32,30 @@ function main() {
         }
     })
     console.log(sum);
+
+    console.log("Part 2");
+    let sum2 = 0;
+    data.forEach(pair => {
+        if (overlap(pair)) {
+            sum2++;
+        }
+    })
+    console.log(sum2);
 }
 
 function contained(pair: ElfPair) {
     return (pair.first.start <= pair.second.start && pair.first.end >= pair.second.end) ||
         (pair.first.start >= pair.second.start && pair.first.end <= pair.second.end);
+}
+
+function overlap(pair: ElfPair) {
+    if (pair.first.start <= pair.second.start) {
+        // first starts
+        return pair.first.end >= pair.second.start
+    } else {
+        // second starts
+        return pair.second.end >= pair.first.start
+    }
 }
 
 main();
