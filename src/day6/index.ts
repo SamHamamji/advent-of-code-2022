@@ -1,18 +1,26 @@
 import * as fs from 'fs';
 
 function main() {
-    const markerLength = 4;
+    const markerLengths = [4, 14];
     const signal = fs.readFileSync(
         "./src/day6/input.txt",
         { encoding: 'ascii', flag: 'r' }
     );
 
+    console.log("Part 1:");
+    console.log(findFirstMarker(signal, markerLengths[0]));
+
+    console.log("Part 2;");
+    console.log(findFirstMarker(signal, markerLengths[1]));
+}
+
+function findFirstMarker(signal: string, markerLength: number) {
     for (let i = 0; i < signal.length - markerLength; i++) {
         if (isMarker(signal, i, markerLength)) {
-            console.log(i + markerLength);
-            break;
+            return (i + markerLength)
         }
     }
+    throw new Error("No marker found in signal.");
 
 }
 
