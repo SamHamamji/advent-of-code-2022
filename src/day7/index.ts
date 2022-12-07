@@ -100,6 +100,34 @@ function parseCommand(text: string) {
     return command;
 }
 
+function findTotalDirSize(storage: Storage, upperBound: number) {
+    if (storage instanceof File) {
+        return 0;
+    }
+    let total = 0;
+    (storage as Directory).children.forEach(child => {
+        total += findTotalDirSize(child, upperBound);
+    });
+    if (storage.getSize() <= upperBound)
+        total += storage.getSize();
+    return total;
+}
+
+function findSmallestDir(storage: Directory, lowerBound: number) {
+    let min = storage.size;
+    let other: number;
+    (storage as Directory).children.forEach(child => {
+        if (child instanceof Directory) {
+            other = findSmallestDir(child, lowerBound);
+            if (other >= lowerBound && other < min) {
+                min = other;
+            }
+        }
+    });
+    return min;
+}
+
+
 function main() {
     const data = fs.readFileSync(
         "./src/day7/input.txt",
@@ -118,20 +146,16 @@ function main() {
 
     root.computeSize();
 
+    console.log("Part 1:");
     console.log(findTotalDirSize(root, 100000));
+
+    console.log("Part 2:");
+    const totalDiskSpace = 70000000;
+    const neededSpace = 30000000;
+    const missingSpace = neededSpace + root.getSize() - totalDiskSpace;
+    console.log(findSmallestDir(root, missingSpace));
+
 }
 
-function findTotalDirSize(root: Storage, upperBound: number) {
-    if (root instanceof File) {
-        return 0;
-    }
-    let total = 0;
-    (root as Directory).children.forEach(child => {
-        total += findTotalDirSize(child, upperBound);
-    });
-    if (root.getSize() <= upperBound)
-        total += root.getSize();
-    return total;
-}
 
 main();
