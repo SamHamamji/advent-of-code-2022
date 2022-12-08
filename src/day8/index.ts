@@ -4,49 +4,60 @@ enum Direction { up, right, down, left };
 
 class Tree {
     height: number;
-
     constructor(height: number) {
         this.height = height;
     }
 }
 
 function checkVisibility(forest: Tree[][], x: number, y: number) {
-    if (x === 0 || x === forest[0].length || y === 0 || y === forest.length)
-        return true;
-    return checkVisibilityHelper(forest, x, y, Direction.up, forest[y][x].height) ||
-        checkVisibilityHelper(forest, x, y, Direction.right, forest[y][x].height) ||
-        checkVisibilityHelper(forest, x, y, Direction.down, forest[y][x].height) ||
-        checkVisibilityHelper(forest, x, y, Direction.left, forest[y][x].height);
+    return [Direction.up, Direction.right, Direction.down, Direction.left].some((direction) =>
+        checkVisibilityHelper(forest, x, y, direction, forest[y][x].height)
+    );
 }
 
 function checkVisibilityHelper(forest: Tree[][], x: number, y: number, direction: Direction, height: number): boolean {
-    let neighborX = x;
-    let neighborY = y;
-
-    switch (direction) {
-        case (Direction.up):
-            neighborY--;
-            break;
-        case (Direction.right):
-            neighborX++;
-            break;
-        case (Direction.down):
-            neighborY++;
-            break;
-        case (Direction.left):
-            neighborX--;
-            break;
-    }
-    if ((neighborY < 0 || neighborY >= forest.length) ||
-        (neighborX < 0 || neighborX >= forest[0].length)) {
+    const [neighborX, neighborY] = findNeighbour(x, y, direction);
+    if (!insideForest(forest, neighborX, neighborY)) {
         return true;
     }
-
     if (forest[neighborY][neighborX].height >= height)
         return false;
 
     return checkVisibilityHelper(forest, neighborX, neighborY, direction, height);
+}
 
+function scenicScore(forest: Tree[][], x: number, y: number) {
+    return [Direction.up, Direction.right, Direction.down, Direction.left].map(direction =>
+        scenicScoreHelper(forest, x, y, direction, forest[y][x].height)
+    ).reduce((a, b) => a * b);
+}
+
+function scenicScoreHelper(forest: Tree[][], x: number, y: number, direction: Direction, height: number): number {
+    const [neighborX, neighborY] = findNeighbour(x, y, direction);
+    if (!insideForest(forest, neighborX, neighborY))
+        return 0;
+    if (forest[neighborY][neighborX].height >= height)
+        return 1;
+
+    return 1 + scenicScoreHelper(forest, neighborX, neighborY, direction, height);
+}
+
+function findNeighbour(x: number, y: number, direction: Direction): [number, number] {
+    switch (direction) {
+        case (Direction.up):
+            return [x, y - 1];
+        case (Direction.right):
+            return [x + 1, y];
+        case (Direction.down):
+            return [x, y + 1];
+        case (Direction.left):
+            return [x - 1, y];
+    }
+}
+
+function insideForest(forest: Tree[][], x: number, y: number) {
+    return ((0 <= y && y < forest.length) &&
+        (0 <= x && x < forest[0].length));
 }
 
 function main() {
@@ -61,14 +72,26 @@ function main() {
         )
     );
 
-    let sum = 0;
+    console.log("Part 1: Visibility");
+    let total = 0;
     for (let y = 0; y < forest.length; y++) {
         for (let x = 0; x < forest[0].length; x++) {
             if (checkVisibility(forest, x, y))
-                sum++;
+                total++;
         }
     }
-    console.log(sum);
+    console.log(`Total visibility: ${total}`);
+
+    console.log("Part 1: Scenic score");
+    let max = Number.NEGATIVE_INFINITY;
+    for (let y = 0; y < forest.length; y++) {
+        for (let x = 0; x < forest[0].length; x++) {
+            const score = scenicScore(forest, x, y);
+            if (score > max)
+                max = score;
+        }
+    }
+    console.log(`Maximum scenic score: ${max}`);
 }
 
 
