@@ -16,9 +16,16 @@ if (!(day >= firstDay && day <= lastDay)) {
     throw new Error(message);
 }
 
+const indexFile = `./src/day${day}/index.ts`;
 const inputFile = `./src/day${day}/input.txt`;
+if (!fs.existsSync(indexFile)) {
+    const message = `Day ${day} is not posted yet`;
+    throw new Error(message);
+}
+
 if (!fs.existsSync(inputFile)) {
-    const message = `${day} is not posted yet`;
+    const message = `input.txt is missing for day ${day}, ` +
+        `you can download it from https://adventofcode.com/2022/day/${day}/input`;
     throw new Error(message);
 }
 
