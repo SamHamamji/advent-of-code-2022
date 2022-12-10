@@ -11,16 +11,16 @@ interface Move {
 }
 
 class Rope {
-    head: Point;
-    tail: Point;
+    knots: Point[];
     tailHistory: Set<string>;
 
-    constructor(head: Point = { x: 0, y: 0 }, tail: Point = { x: 0, y: 0 }) {
-        this.head = head;
-        this.tail = tail;
+    constructor(knotNum: number) {
+        this.knots = Array.from({ length: knotNum },
+            (_) => ({ x: 0, y: 0 } as Point)
+        );
         this.tailHistory = new Set<string>();
         this.addTailToHistory();
-    }
+    };
 
     executeMoves(moves: Move[]) {
         moves.forEach(move =>
@@ -37,35 +37,41 @@ class Rope {
 
     private executeSingleStep(direction: string) {
         if (direction == "U")
-            this.head.y++;
+            this.knots[0].y++;
         else if (direction == "R")
-            this.head.x++;
+            this.knots[0].x++;
         else if (direction == "D")
-            this.head.y--;
+            this.knots[0].y--;
         else if (direction == "L")
-            this.head.x--;
+            this.knots[0].x--;
         else {
             const msg = `Direction ${direction} not recognized`;
             throw new Error(msg);
         }
 
-        if (!areTouching(this.head, this.tail)) {
-            if (this.tail.x != this.head.x)
-                if (this.tail.x < this.head.x)
-                    this.tail.x++;
-                else
-                    this.tail.x--;
+        for (let i = 0; i < this.knots.length - 1; i++) {
+            const moverKnot = this.knots[i];
+            const movingKnot = this.knots[i + 1];
+            if (!areTouching(moverKnot, movingKnot)) {
+                if (movingKnot.x != moverKnot.x)
+                    if (movingKnot.x < moverKnot.x)
+                        movingKnot.x++;
+                    else
+                        movingKnot.x--;
 
-            if (this.tail.y != this.head.y)
-                if (this.tail.y < this.head.y)
-                    this.tail.y++;
-                else
-                    this.tail.y--;
+                if (movingKnot.y != moverKnot.y)
+                    if (movingKnot.y < moverKnot.y)
+                        movingKnot.y++;
+                    else
+                        movingKnot.y--;
+            }
+
         }
     }
 
     private addTailToHistory() {
-        this.tailHistory.add(`${this.tail.x},${this.tail.y}`);
+        const tail = this.knots.at(-1) as Point;
+        this.tailHistory.add(`${tail.x},${tail.y}`);
     }
 }
 
@@ -86,9 +92,15 @@ function main() {
         return { direction: direction, steps: steps } as Move;
     });
 
-    const rope = new Rope();
-    rope.executeMoves(moves);
-    console.log(rope.tailHistory.size);
+    console.log("Phase 1:");
+    const rope1 = new Rope(2);
+    rope1.executeMoves(moves);
+    console.log(rope1.tailHistory.size);
+
+    console.log("Phase 2:");
+    const rope2 = new Rope(10);
+    rope2.executeMoves(moves);
+    console.log(rope2.tailHistory.size);
 }
 
 
