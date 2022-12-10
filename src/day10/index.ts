@@ -2,37 +2,50 @@ import * as fs from 'fs';
 
 class CPU {
     register: number = 1;
-    clock: number = 0;
+    cycle: number = 1;
     instructions: string[];
-    savedClocks: Map<number, number | null>;
+    savedCycles: Map<number, number | null>;
+    CRT: string;
+    static readonly CRTWidth: number = 40;
+    static readonly CRTHeight: number = 6;
 
-    constructor(instructions: string[], clocksToSave: number[]) {
+    constructor(instructions: string[], cyclesToSave: number[]) {
         this.instructions = instructions;
-        this.savedClocks = new Map<number, number | null>(clocksToSave.map(i => [i, null]));
+        this.savedCycles = new Map<number, number | null>(cyclesToSave.map(i => [i, null]));
+        this.CRT = "";
     }
 
     run() {
         let running: string;
-        let clocksLeft: number;
+        let cyclesLeft: number;
         this.instructions.forEach(instruction => {
             running = instruction;
             if (running === "noop")
-                clocksLeft = 1;
+                cyclesLeft = 1;
             else
-                clocksLeft = 2;
+                cyclesLeft = 2;
 
-            while (clocksLeft !== 0) {
-                clocksLeft--;
-                this.clock++;
+            while (cyclesLeft !== 0) {
                 this.checkForSaving();
+                this.CRT = this.CRT.concat(
+                    (Math.abs((this.cycle - 1) % CPU.CRTWidth - this.register) <= 1) ? "#" : "."
+                );
+                cyclesLeft--;
+                this.cycle++;
             }
             this.executeInstruction(instruction);
         });
     }
 
+    showCRT() {
+        for (let i = 0; i < CPU.CRTHeight; i++) {
+            console.log(this.CRT.slice(i * CPU.CRTWidth, (i + 1) * CPU.CRTWidth));
+        }
+    }
+
     private checkForSaving() {
-        if (this.savedClocks.has(this.clock)) {
-            this.savedClocks.set(this.clock, this.getSignalStrength());
+        if (this.savedCycles.has(this.cycle)) {
+            this.savedCycles.set(this.cycle, this.register);
         }
     }
 
@@ -44,7 +57,7 @@ class CPU {
     }
 
     private getSignalStrength() {
-        return this.clock * this.register;
+        return this.cycle * this.register;
     }
 }
 
@@ -53,22 +66,22 @@ function main() {
         "./src/day10/input.txt",
         { encoding: 'ascii', flag: 'r' }
     );
-
     const instructions = data.trim().split("\n");
-    const clocksToSave = Array.from({ length: 6 }, (_, i) => 20 + 40 * i);
-
-    const cpu = new CPU(instructions, clocksToSave);
+    const cyclesToSave = Array.from({ length: 6 }, (_, i) => 20 + 40 * i);
+    const cpu = new CPU(instructions, cyclesToSave);
 
     cpu.run();
 
     let signalStrengthSum = 0;
-    cpu.savedClocks.forEach((value) => {
-        signalStrengthSum += (value as number);
+    cpu.savedCycles.forEach((value, cycle) => {
+        signalStrengthSum += (value as number) * cycle;
     });
 
-    console.log(cpu.savedClocks);
-
+    console.log("Part 1:");
     console.log(signalStrengthSum);
+
+    console.log("Part 2:");
+    cpu.showCRT();
 }
 
 
