@@ -16,17 +16,20 @@ if (!(day >= firstDay && day <= lastDay)) {
     throw new Error(message);
 }
 
-const indexFile = `./src/day${day}/index.ts`;
-const inputFile = `./src/day${day}/input.txt`;
-if (!fs.existsSync(indexFile)) {
+const directoryName = "day" + day.toString().padStart(Math.log10(lastDay) + 1, "0");
+
+const directoryPath = `./src/${directoryName}`;
+if (!fs.existsSync(directoryPath)) {
     const message = `Day ${day} is not posted yet`;
     throw new Error(message);
 }
 
-if (!fs.existsSync(inputFile)) {
+const inputPath = `./src/${directoryName}/input.txt`;
+if (!fs.existsSync(inputPath)) {
     const message = `input.txt is missing for day ${day}, ` +
         `you can download it from https://adventofcode.com/2022/day/${day}/input`;
     throw new Error(message);
 }
 
-import(`./day${day}/index.ts`);
+const indexFile = `./${directoryName}/index`;
+import(indexFile);

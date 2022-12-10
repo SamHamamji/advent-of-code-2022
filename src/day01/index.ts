@@ -4,7 +4,7 @@ const podiumLength = 3;
 
 function main() {
     const data = fs.readFileSync(
-        "./src/day1/input.txt",
+        "./src/day01/input.txt",
         { encoding: 'ascii', flag: 'r' }
     );
     const inventory = data.split("\n\n").map((array) => array.trim().split("\n").map((element) => parseInt(element)));
