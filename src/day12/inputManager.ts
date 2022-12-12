@@ -28,7 +28,7 @@ function parseLetter(letter: string, x: number, y: number): Location {
         y: y,
         elevation: elevation,
         position: position,
-        shortestDistance: (position === Position.start) ? 0 : undefined,
+        shortestDistance: undefined,
     };
 }
 

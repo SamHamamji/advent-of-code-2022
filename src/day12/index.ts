@@ -2,7 +2,12 @@ import * as fs from 'fs';
 import { Location, Position } from './types';
 import { parseData } from './inputManager';
 
-function findShortestDistance(map: Location[][], source: { x: number, y: number }) {
+function findShortestDistance(
+    map: Location[][],
+    source: { x: number, y: number },
+    isReachable: (source: Location, neighbour: Location) => boolean
+) {
+    map[source.y][source.x].shortestDistance = 0;
     const queue: Location[] = [map[source.y][source.x]];
     while (queue.length !== 0) {
         const current = queue.pop()!;
@@ -28,8 +33,12 @@ function findShortestDistance(map: Location[][], source: { x: number, y: number 
     }
 }
 
-function isReachable(source: Location, neighbour: Location) {
+function isReachableAscending(source: Location, neighbour: Location) {
     return neighbour.elevation <= 1 + source.elevation;
+}
+
+function isReachableDescending(source: Location, neighbour: Location) {
+    return source.elevation <= 1 + neighbour.elevation;
 }
 
 function findLocation(map: Location[][], identifier: (location: Location) => boolean) {
@@ -40,7 +49,6 @@ function findLocation(map: Location[][], identifier: (location: Location) => boo
         }
     }
     throw new Error("Location not found");
-
 }
 
 function main() {
@@ -49,6 +57,14 @@ function main() {
         { encoding: 'ascii', flag: 'r' }
     );
 
+    console.log("Part 1");
+    part1(data);
+
+    console.log("Part 2");
+    part2(data);
+}
+
+function part1(data: string) {
     const map: Location[][] = parseData(data);
 
     const start = findLocation(map, (location) =>
@@ -58,9 +74,29 @@ function main() {
         location.position === Position.end
     );
 
-    findShortestDistance(map, start);
+    findShortestDistance(map, start, isReachableAscending);
 
-    console.log(end.shortestDistance)
+    console.log(end.shortestDistance);
+}
+
+function part2(data: string) {
+    const map: Location[][] = parseData(data);
+
+    const start = findLocation(map, (location) =>
+        location.position === Position.start
+    );
+    const end = findLocation(map, (location) =>
+        location.position === Position.end
+    );
+
+    findShortestDistance(map, end, isReachableDescending);
+
+    const distances = map.flatMap(row => row.map(location =>
+        (location.shortestDistance !== undefined && location.elevation === 0) ?
+            location.shortestDistance :
+            Number.MAX_SAFE_INTEGER
+    ));
+    console.log(Math.min(...distances));
 }
 
 main();
