@@ -12,8 +12,10 @@ class Cave {
     source: { x: number, y: number };
     static initialSource = { x: 500, y: 0 };
     sandCounter = 0;
+    part1: boolean;
 
-    constructor(data: string) {
+    constructor(data: string, part1: boolean) {
+        this.part1 = part1;
         const rockPaths = data.trim().split("\n").map(line =>
             line.split(" -> ").map(location =>
                 location.split(",").map(value => parseInt(value))
@@ -23,11 +25,20 @@ class Cave {
         );
 
         const mapRange = Cave.getRange(rockPaths);
-        this.map = Array.from({ length: mapRange.y[1] - mapRange.y[0] + 1 }, (_, i) =>
-            Array.from({ length: mapRange.x[1] - mapRange.x[0] + 1 }, (_, j) => Element.air)
+        this.map = Array.from({ length: mapRange.y[1] - mapRange.y[0] + (this.part1 ? 1 : 3) }, (_, i) =>
+            Array.from({ length: mapRange.x[1] + (part1 ? - mapRange.x[0] + 1 : mapRange.x[1]) }, (_, j) =>
+                Element.air)
         );
         this.drawRockPaths(rockPaths, mapRange);
-        this.source = { x: Cave.initialSource.x - mapRange.x[0], y: Cave.initialSource.y };
+        if (!this.part1) {
+            this.map[this.map.length - 1].forEach((_, index) =>
+                this.map[this.map.length - 1][index] = Element.rock
+            );
+        }
+        this.source = {
+            x: Cave.initialSource.x - (this.part1 ? mapRange.x[0] : 0),
+            y: Cave.initialSource.y
+        };
         this.map[this.source.y][this.source.x] = Element.source;
     }
 
@@ -37,7 +48,11 @@ class Cave {
         ).join("\n"));
     }
 
-    dropSingleSand(): boolean {
+    dropSand() {
+        while (!this.dropSingleSand());
+    }
+
+    private dropSingleSand(): boolean {
         return this.dropSingleSandHelper(this.source);
     }
 
@@ -50,16 +65,26 @@ class Cave {
 
         for (const lowerLocationIndex of lowerLocationIndexes) {
             if (lowerLocationIndex.y < 0 ||
-                lowerLocationIndex.y >= this.map.length)
-                return true;
+                lowerLocationIndex.y >= this.map.length ||
+                lowerLocationIndex.x < 0 ||
+                lowerLocationIndex.x >= this.map.length)
+                if (this.part1)
+                    return true;
             const lowerLocation = this.map[lowerLocationIndex.y][lowerLocationIndex.x];
-            if (lowerLocation === undefined)
-                return true;
+            if (lowerLocation === undefined) {
+                this.show();
+                const errorMessage = `Location ${lowerLocationIndex.x}, ${lowerLocationIndex.y} is undefined`;
+                throw new Error(errorMessage);
+            }
             if (lowerLocation === Element.air)
                 return this.dropSingleSandHelper(lowerLocationIndex);
         }
-        this.map[location.y][location.x] = Element.sand;
         this.sandCounter++;
+        if (this.map[location.y][location.x] === Element.source) {
+            this.map[location.y][location.x] = Element.sand;
+            return true;
+        }
+        this.map[location.y][location.x] = Element.sand;
         return false;
     }
 
@@ -80,16 +105,16 @@ class Cave {
             const next = rockPath[index + 1];
             if (current.x !== next.x) {
                 for (let i = current.x; i !== next.x; i += (current.x < next.x) ? 1 : -1) {
-                    this.map[current.y - rockRange.y[0]][i - rockRange.x[0]] = Element.rock;
+                    this.map[current.y][i - (this.part1 ? rockRange.x[0] : 0)] = Element.rock;
                 }
             } else {
                 for (let i = current.y; i !== next.y; i += (current.y < next.y) ? 1 : -1) {
-                    this.map[i - rockRange.y[0]][current.x - rockRange.x[0]] = Element.rock;
+                    this.map[i][current.x - (this.part1 ? rockRange.x[0] : 0)] = Element.rock;
                 }
             }
         }
         const last = rockPath[rockPath.length - 1];
-        this.map[last.y - rockRange.y[0]][last.x - rockRange.x[0]] = Element.rock;
+        this.map[last.y][last.x - (this.part1 ? rockRange.x[0] : 0)] = Element.rock;
     }
 
     static getRange(rockPaths: { x: number, y: number }[][]) {
@@ -129,12 +154,16 @@ function main() {
         { encoding: 'ascii', flag: 'r' }
     );
 
-    const cave = new Cave(data);
+    console.log("Part 1");
+    const cave1 = new Cave(data, true);
+    cave1.dropSand();
+    cave1.show();
+    console.log(cave1.sandCounter, "\n");
 
-    while (!cave.dropSingleSand());
-
-    cave.show();
-    console.log(cave.sandCounter);
+    console.log("Part 2");
+    const cave2 = new Cave(data, false);
+    cave2.dropSand();
+    console.log(cave2.sandCounter);
 }
 
 
