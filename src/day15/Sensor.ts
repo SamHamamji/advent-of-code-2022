@@ -31,4 +31,4 @@ class Sensor {
     }
 }
 
-export { Sensor };
+export { Sensor, Coordinates };
